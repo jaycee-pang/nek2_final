@@ -6,15 +6,16 @@ This repository contains the research work on applying machine learning models t
 ## Installation
 To set up this project locally, follow the steps below:
 ```bash
-git clone https://your-repository-url.git
-cd your-repository-directory
+git clone https://github.com/TsukiTiger/NEK9_Final.git
+cd NEK9_Final
 pip install -r requirements.txt
 ```
 
 ## Usage
-To run the main analysis scripts, use the following command:
+To run the main analysis notebook, use the following command:
 ```bash
-python main_analysis.py
+code .
+cd notebooks
 ```
 Ensure you have the necessary data files in the appropriate directories as expected by the scripts.
 
