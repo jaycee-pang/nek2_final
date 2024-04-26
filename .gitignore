@@ -1,0 +1,26 @@
+# Ignore all content in the datasets directory
+datasets/
+
+# Ignore Python bytecodes
+__pycache__/
+*.py[cod]
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore files related to Python virtual environments
+*.venv
+venv/
+ENV/
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore other files that are not necessary for your repository
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+
