@@ -1,51 +1,30 @@
 # Uncertainty Quantification for AMPL Point Predictions
 
 ## Overview
-This repository contains the research work on applying machine learning models to predict the binding or inhibition activity of NimA-related kinases. The project is part of a collaboration with the Accelerating Therapeutics for Opportunities in Medicine (ATOM) Consortium. It focuses on addressing challenges posed by imbalanced and scarce experimental data through uncertainty quantification techniques.
+This repository contains the routines and functions used for the MSSE capstone project.The goal of this project was to build and compare various classification models’ and their ability to classify NEK2 binders and inhibitors. This project, was guided by the Open Data and Models group at the Accelerating Therapeutics for Opportunities in Medicine (ATOM) Consortium. The data is provided by Chembl, but it is not included here as an extra precaution. 
 
 ## Installation
 To set up this project locally, follow the steps below:
 ```bash
-git clone https://github.com/TsukiTiger/NEK9_Final.git
-cd NEK9_Final
-pip install -r requirements.txt
+git clone https://github.com/jaycee-pang/nek2_final
+cd NEK2_Final
 ```
-
-# To activate this environment, use
-#
-#     $ conda activate nek2_final
-#
-# To deactivate an active environment, use
-#
-#     $ conda deactivate
-
-
-conda env create -f environment.yml 
+To install and activate the conda virtual environment: 
+```bash
+conda env create -f environment.yml
 conda activate nek2_final
 python -m ipykernel install --user --name nek2_final 
- 
-## Usage
-To run the main analysis notebook, use the following command:
+``` 
+To deactivate: 
 ```bash
-code .
-cd notebooks
+conda deactivate
 ```
-Ensure you have the necessary data files in the appropriate directories as expected by the scripts.
-
-## Data
-Due to confidentiality agreements, raw data files are not included in this repository. Data used in this project are part of the ATOM Consortium's private datasets. Please ensure you have the correct permissions to access the data.
-
-## Models
-This project includes several machine learning models aimed at classifying drug compounds. The models are saved in the `models/` directory after training and can be loaded for further analysis or prediction as follows:
-```python
-import joblib
-model = joblib.load('models/model_name.pkl')
-```
-
-## Contributing
-We welcome contributions from the community. Please fork the repository and submit a pull request with your proposed changes. For major changes, please open an issue first to discuss what you would like to change.
+## Directory 
+Utility functions used throughout this project are located in the root directory. These are Python scripts including: 
+- `utils.py`: for molecular normalization 
+- `RF_Utils.py`: building RF models and evaulating metrics 
+- `split_data.py`: for creating random splits 
+- `VisUtils.py`: plotting functions 
 
 ## Contact
-- **Chongye Feng** - chongyef@gmail.com
-- **Ya Ju Fan, PhD** - Mentor's Email Here
-- **Amanda Paulson, PhD** - Mentor's Email Here
+- **Jaycee Pang** - jayceempang@gmail.com
