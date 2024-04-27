@@ -1,7 +1,7 @@
 # Uncertainty Quantification for AMPL Point Predictions
 
 ## Overview
-This repository contains the routines and functions used for the MSSE capstone project.The goal of this project was to build and compare various classification models’ and their ability to classify NEK2 binders and inhibitors. This project, was guided by the Open Data and Models group at the Accelerating Therapeutics for Opportunities in Medicine (ATOM) Consortium. The data is provided by Chembl, but it is not included here as an extra precaution. 
+This repository contains the routines and functions used for the MSSE capstone project. The goal of this project was to build and compare various classification models’ and their ability to classify NEK2 binders and inhibitors. This project, was guided by the Open Data and Models group at the Accelerating Therapeutics for Opportunities in Medicine (ATOM) Consortium. The data is provided by Chembl, but it is not included here as an extra precaution. 
 
 ## Installation
 To set up this project locally, follow the steps below:
@@ -12,7 +12,7 @@ cd nek2_final
 To install and activate the conda virtual environment: 
 ```bash
 install conda
-conda env create -f environment.yml
+conda env create -f environment.yaml
 conda activate nek2_final
 python -m ipykernel install --user --name nek2_final 
 ``` 
