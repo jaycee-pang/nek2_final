@@ -7,7 +7,7 @@ This repository contains the routines and functions used for the MSSE capstone p
 To set up this project locally, follow the steps below:
 ```bash
 git clone https://github.com/jaycee-pang/nek2_final
-cd NEK2_Final
+cd nek2_Final
 ```
 To install and activate the conda virtual environment: 
 ```bash
