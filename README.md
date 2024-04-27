@@ -25,7 +25,10 @@ Utility functions used throughout this project are located in the root directory
 - `utils.py`: for molecular normalization 
 - `RF_Utils.py`: building RF models and evaulating metrics 
 - `split_data.py`: for creating random splits 
-- `VisUtils.py`: plotting functions 
+- `VisUtils.py`: plotting functions
+
+the nek2_final directory contains the notebooks to run. 
+In this directory, there are 3 subdirectories: models, data, and notebooks. You should add the data directory here. The models directory is where the models will be saved to. The data directory contains folders for binding and inhibition data separately. The notebooks is the main folder where the splits are generated, models are built, trained, and tested, and visualizations are produced.
 
 ## Contact
 - **Jaycee Pang** - jayceempang@gmail.com
