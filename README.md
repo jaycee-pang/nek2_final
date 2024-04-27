@@ -11,6 +11,7 @@ cd NEK2_Final
 ```
 To install and activate the conda virtual environment: 
 ```bash
+install conda
 conda env create -f environment.yml
 conda activate nek2_final
 python -m ipykernel install --user --name nek2_final 
