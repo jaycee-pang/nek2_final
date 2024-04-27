@@ -1,5 +1,5 @@
 # Ignore all content in the datasets directory
-datasets/
+data/
 
 # Ignore Python bytecodes
 __pycache__/
@@ -24,3 +24,4 @@ ENV/
 *.pid
 *.gz
 
+# Data

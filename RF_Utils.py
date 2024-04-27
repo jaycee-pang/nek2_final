@@ -7,19 +7,17 @@ import os
 import pickle
 import shutil
 import matplotlib 
-# matplotlib.use('Agg')
+from scipy.spatial.distance import euclidean
 
 from matplotlib import pyplot as plt
 import sklearn
 from sklearn.model_selection import KFold
 
 import imblearn as imb
-
-
 from sklearn.metrics import confusion_matrix
 import itertools
 
-from scipy.stats import randint
+from scipy.stats import randint, zscore
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import accuracy_score, precision_score, f1_score, roc_auc_score, roc_curve, precision_recall_curve, auc, recall_score
 
@@ -27,9 +25,8 @@ from sklearn.ensemble import RandomForestClassifier
 from imblearn.ensemble import BalancedRandomForestClassifier
 import sys
 sys.path.append('../')
-# import utils
 from sklearn.model_selection import GridSearchCV
-from VisUtils import *
+
 
 
 def calculate_metrics(y_true, y_pred): 
@@ -43,7 +40,9 @@ def calculate_metrics(y_true, y_pred):
 def rf_results(model, x_input, true_labels): 
     """predictions and get metrics 
     @params
-    model: fitted model (fitted to train set)
+        - model: fitted model (fitted to train set)
+        - x_input (np.array): x feats (either train or test)
+        - true_labels (np.array): corresponding true labels 
     @returns
     dictionary of results and metrics"""
     predictions = model.predict(x_input)
@@ -53,21 +52,20 @@ def rf_results(model, x_input, true_labels):
     tp, tn, fp, fn = calculate_metrics(true_labels, predictions)
     specificity = tn / (tn + fp)
     probability = model.predict_proba(x_input)
-    # print(f'accuracy: {acc:.3f}, precision: {precision:.3f}, recall: {recall:.3f}, specificity: {specificity:.3f}')
+    print(f'accuracy: {acc:.3f}, precision: {precision:.3f}, recall: {recall:.3f}, specificity: {specificity:.3f}')
 
     return {'predictions':predictions, 'accuracy':acc , 'precision': precision, 'recall':recall, 'specificity':specificity}
 
 def rf_models(train_x, train_y, test_x, test_y, rf_type, parameters):
     """Fit a RF model, make predictions, get probabilities
     @params: 
-    train_x, train_y, test_x, test_y: train and test set inputs (np arrays) 
-    rf_type: model type: RandomForestClassifier, RandomForestClassifier with class_weight:'balanced', or BalancedRandomForestClassifier
+        - train_x, train_y, test_x, test_y: train and test set inputs (np arrays) 
+        - rf_type (str): model type: RandomForestClassifier, RandomForestClassifier with class_weight:'balanced', or BalancedRandomForestClassifier
         default is RFC 
-    parameters: dict for model params 
-    dataset_type: binding or inhibition
+        - parameters: dict for model params 
+
     @returns: dict with model, train/test prections and probabilities
     """
-
     n_estimators = parameters.get('n_estimators', 100)
     random_state = parameters.get('random_state', 42) 
     criterion = parameters.get('criterion', 'gini')
@@ -87,6 +85,7 @@ def rf_models(train_x, train_y, test_x, test_y, rf_type, parameters):
     else:
         model = RandomForestClassifier(n_estimators=n_estimators, criterion=criterion, max_depth=max_depth, min_samples_split=min_samples_split
                                 , min_samples_leaf=min_samples_leaf, bootstrap=bootstrap, max_features=max_features, class_weight=class_weight)
+    
 
     model.fit(train_x, train_y)
     model_results = rf_results2(model, train_x, train_y, test_x, test_y)
@@ -97,7 +96,7 @@ def rf_models(train_x, train_y, test_x, test_y, rf_type, parameters):
              'train_prob':model_results['train_prob'], 'test_prob': model_results['test_prob']}
 
 
-def find_best_models(train_x, train_y, test_x, test_y, rf_type, parameters, param_dist, dataset_type, save_filename, verbose_val=None):
+def find_best_models(train_x, train_y, test_x, test_y, rf_type, parameters, param_dist, dataset_type,verbose_val=None):
     """uses GridSearchCV not random grid search
     Grid search to find the best model, make predictions (train and test), get probability (train and test), and plot CM 
     Save best model to pickle file 
@@ -143,73 +142,8 @@ def find_best_models(train_x, train_y, test_x, test_y, rf_type, parameters, para
     return {'best_model': best_rf, 'train_pred':model_results['train_pred'], 'test_pred': model_results['test_pred'],
              'train_prob':model_results['train_prob'], 'test_prob': model_results['test_prob']}
 
-def save_model(best_model, save_file): 
-    """Save models to pickle file."""
-    best_params = best_model.get_params()
-    for param, value in best_params.items():
-        print(f"{param}: {value}")
-    pklfile = save_file
-    with open(pklfile, 'wb') as f:
-        pickle.dump(best_model, f)
 
-def rf_plots(train_x, train_y, test_x, test_y, max_depths, n_estimators, max_features, rf_type, parameters, dataset_type): 
-    """model_results is the dictionary with model, predictions, etc."""
-    train_aucs = []
-    test_aucs = []
 
-    for depth in max_depths:
-            parameters['max_depth'] = depth
-            results = rf_models(train_x, train_y, test_x, test_y, rf_type, parameters, dataset_type)
-            train_auc = roc_auc_score(train_y, results['train_pred'])
-            test_auc = roc_auc_score(test_y, results['test_pred'])
-            train_aucs.append(train_auc)
-            test_aucs.append(test_auc)
-
-    plt.plot(max_depths, train_aucs, label='Train AUC')
-    plt.plot(max_depths, test_aucs, label='Test AUC')
-    plt.xlabel('Tree Depth')
-    plt.ylabel('AUC Score')
-    plt.title('Tree Depth vs AUC Score')
-    plt.legend()
-    plt.show();
-
-    train_aucs_est = []
-    test_aucs_est = []
-
-    for estimators in n_estimators:
-        parameters['n_estimators'] = estimators
-        results = rf_models(train_x, train_y, test_x, test_y, rf_type, parameters, dataset_type)
-        train_auc_est = roc_auc_score(train_y, results['train_pred'])
-        test_auc_est = roc_auc_score(test_y, results['test_pred'])
-        train_aucs_est.append(train_auc_est)
-        test_aucs_est.append(test_auc_est)
-
-    plt.plot(n_estimators, train_aucs_est, label='Train AUC')
-    plt.plot(n_estimators, test_aucs_est, label='Test AUC')
-    plt.xlabel('Number of Estimators')
-    plt.ylabel('AUC Score')
-    plt.title('Number of Estimators vs AUC Score')
-    plt.legend()
-    plt.show();
-
-    train_aucs_feats = []
-    test_aucs_feats = []
-
-    for features in max_features:
-        parameters['max_features'] = features
-        results = rf_models(train_x, train_y, test_x, test_y, rf_type, parameters, dataset_type)
-        train_aucfeats = roc_auc_score(train_y, results['train_pred'])
-        test_auc_feats = roc_auc_score(test_y, results['test_pred'])
-        train_aucs_feats.append(train_aucs_feats)
-        test_aucs_feats.append(test_auc_feats)
-
-    plt.plot(max_features, train_aucs_feats, label='Train AUC')
-    plt.plot(max_features, test_aucs_feats, label='Test AUC')
-    plt.xlabel('Max Features')
-    plt.ylabel('AUC Score')
-    plt.title('Max Features vs AUC Score')
-    plt.legend()
-    plt.show();
 
 
 def rf_results2(model, train_x, train_y, test_x, test_y): 

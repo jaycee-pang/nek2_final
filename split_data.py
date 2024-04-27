@@ -1,11 +1,14 @@
-from RF_GSCV import *
+from RF_Utils import *
+import os 
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold
 def make_splits(full_df, split_path, name):
     """ Make balanced ratio splits for majority/minority (assuming minority class is the active class)
         and save to a Df with column 'fold'
-    full_df is the 1uM 50 pct MOE descriptor dataframe 
-    split_path: where to save the final concated df 
-    name: add NEK# and indicate binding/inhibition
+    @params: 
+        - full_df is the 1uM 50 pct MOE descriptor dataframe 
+        - split_path(str): where to save the final concated df
+        - name(str): name of new split files 
     """
     print(f'dataset shape:  {full_df.shape}')
     print(full_df.active.value_counts())
@@ -34,16 +37,14 @@ def make_splits(full_df, split_path, name):
     if not os.path.exists(split_path):
         os.makedirs(split_path)
     print('after major+minor concat:')
-    
-    
     print(f'all_fold shape: {all_fold_df.shape}')
     print(f'all_fold active value counts: {all_fold_df.active.value_counts()}')
     split_path = os.path.join(split_path, '')
 
-    all_fold_df.to_csv(split_path+name+"_JP_splits_1_uM_min_50_pct_5fold_random_imbalanced.csv", index=False)
+    all_fold_df.to_csv(split_path+name, index=False)
     return all_fold_df
 
-def get_datasplits(save_path, name, all_fold_df=None, all_fold_path=None): 
+def get_datasplits(save_path, name, all_fold_df): 
     """ Split the into different train/test splits based on fold # and save 
         final trainx, trainy, testx, testy to csv 
     save_path: where to save the train/test splits 
@@ -54,12 +55,9 @@ def get_datasplits(save_path, name, all_fold_df=None, all_fold_path=None):
         should contain balanced ratios across the different folds 
     """
     foldAll = ["fold1","fold2","fold3","fold4","fold5"]
-    if (all_fold_df is not None and not all_fold_df.empty): 
-        random_df = all_fold_df
-    elif(split_path is not None): 
-        random_df = pd.read_csv(all_fold_path)
-    else: 
-        raise ValueError('Provide a valid dataframe or the path to the dataframe')
+
+    random_df = all_fold_df
+  
     moe_columns = random_df.columns[3:] # all_fold_MOE [3:] # compound_id, base_rdkit_smiles, active
     moe_columns = moe_columns[:-1]
     # print(moe_columns)
@@ -83,6 +81,19 @@ def get_datasplits(save_path, name, all_fold_df=None, all_fold_path=None):
         test_x_df.to_csv(save_path+name+"_random_"+fold+"_testX.csv", index=False)
         test_y_df.to_csv(save_path+name+"_random_"+fold+"_testY.csv", index=False)
     return train_x_df, train_y_df, test_x_df, test_y_df
+
+def scale_data(train_x_df, train_y_df, test_x_df, test_y_df): 
+    x_df = pd.concat([train_x_df, test_x_df])
+    scaling=StandardScaler()
+    scaling.fit(x_df)
+    Scaled_data=scaling.transform(x_df)
+    train_x = scaling.transform(train_x_df)
+    test_x = scaling.transform(test_x_df) 
+    
+    train_y = train_y_df.to_numpy().flatten()
+    test_y = test_y_df.to_numpy().flatten()
+    return train_x, train_y, test_x, test_y
+    
     
 
     

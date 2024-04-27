@@ -6,7 +6,8 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.manifold import TSNE
 import pandas as pd
 from sklearn.metrics import precision_score, f1_score, roc_auc_score, roc_curve, precision_recall_curve, auc, recall_score, PrecisionRecallDisplay
-
+from scipy.spatial.distance import euclidean
+from scipy.stats import zscore
 # Plot Confusion Matrix
 def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title=None, cmap=plt.cm.Blues):
     """
@@ -51,6 +52,58 @@ def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title=None, 
     fig.tight_layout();
     # return ax
 
+# Plot Confusion Matrix Distribution
+def plot_cm_dist(y_true, y_pred, title="Confusion Matrix Distribution"):
+    """
+    Plots distributions for each quadrant of the confusion matrix.
+    @params: 
+        - y_true (np array or similar): ground truth labels 
+        - y_pred (np array): model's predicitons
+    """
+    cm = confusion_matrix(y_true, y_pred)
+    sns.heatmap(cm, annot=True, fmt="d")
+    plt.title(title)
+    plt.ylabel('Actual label')
+    plt.xlabel('Predicted label')
+    plt.show()
+
+
+# Plot KDE for Confusion Matrix Distribution
+def plot_cm_dist_kde(y_true, y_pred_prob, title="KDE for Confusion Matrix Distribution"):
+    """
+    Plots Kernel Density Estimation (KDE) for true positives and false positives.
+    @params: 
+        - y_true (np array or similar): ground truth labels 
+        - y_pred (np array): model's predicitons
+    """
+    sns.kdeplot(y_pred_prob[y_true == 1], label='True Positives', shade=True)
+    sns.kdeplot(y_pred_prob[y_true == 0], label='False Positives', shade=True)
+    plt.title(title)
+    plt.xlabel('Predicted Probability')
+    plt.ylabel('Density')
+    plt.legend()
+    plt.show(); 
+
+# KDE plot for variances of class 0 or 1 predictions 
+def plot_kde(observed_pred, title): 
+    """Intended use is for the GP models. 
+    @params: 
+        - observed_pred (GP distribution obj returned by GP model)
+    """
+    plt.figure(figsize=(8, 6))
+    var = observed_pred.variance.numpy().tolist()
+    class0_var = observed_pred.variance[0].numpy() 
+    class1_var = observed_pred.variance[1].numpy() 
+    
+    sns.kdeplot(class0_var, label=f'Class 0')
+    sns.kdeplot(class1_var, label=f'Class 1')
+    plt.xlabel('Variance')
+    plt.ylabel('Density')
+    plt.title(f'{title} KDE Variances for Each Class')
+    plt.legend()
+    plt.grid(True)
+    plt.show();
+
 # Plot Heatmap
 def plot_heatmap(data, title="Heatmap", xlabel="X-axis", ylabel="Y-axis"):
     """
@@ -67,6 +120,7 @@ def plot_heatmap(data, title="Heatmap", xlabel="X-axis", ylabel="Y-axis"):
 def plot_tsne(features, labels, title='t-SNE'):
     """
     Plots a t-SNE visualization for the given features and labels.
+    Used for 2 of the principal components. 
     """
     tsne = TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
     tsne_results = tsne.fit_transform(features)
@@ -105,30 +159,8 @@ def plot_hist_tp_tn(y_true, y_pred_prob, threshold=0.5):
     plt.legend(loc='upper right')
     plt.show()
 
-# Plot Confusion Matrix Distribution
-def plot_cm_dist(y_true, y_pred, title="Confusion Matrix Distribution"):
-    """
-    Plots distributions for each quadrant of the confusion matrix.
-    """
-    cm = confusion_matrix(y_true, y_pred)
-    sns.heatmap(cm, annot=True, fmt="d")
-    plt.title(title)
-    plt.ylabel('Actual label')
-    plt.xlabel('Predicted label')
-    plt.show()
 
-# Plot KDE for Confusion Matrix Distribution
-def plot_cm_dist_kde(y_true, y_pred_prob, title="KDE for Confusion Matrix Distribution"):
-    """
-    Plots Kernel Density Estimation (KDE) for true positives and false positives.
-    """
-    sns.kdeplot(y_pred_prob[y_true == 1], label='True Positives', shade=True)
-    sns.kdeplot(y_pred_prob[y_true == 0], label='False Positives', shade=True)
-    plt.title(title)
-    plt.xlabel('Predicted Probability')
-    plt.ylabel('Density')
-    plt.legend()
-    plt.show()
+
 
 def plot_class_and_probability_grids(y_true, probabilities, title_prefix=''):
     """
@@ -173,20 +205,7 @@ def plot_class_and_probability_grids(y_true, probabilities, title_prefix=''):
 
     plt.show()
 
-def plot_kde(observed_pred, title): 
-    plt.figure(figsize=(8, 6))
-    var = observed_pred.variance.numpy().tolist()
-    class0_var = observed_pred.variance[0].numpy() 
-    class1_var = observed_pred.variance[1].numpy() 
-    
-    sns.kdeplot(class0_var, label=f'Class 0')
-    sns.kdeplot(class1_var, label=f'Class 1')
-    plt.xlabel('Variance')
-    plt.ylabel('Density')
-    plt.title(f'{title} KDE Variances for Each Class')
-    plt.legend()
-    plt.grid(True)
-    plt.show();
+
 
 def look_at_data(filepath):
     """5-fold on majority and minority separately, then concat into one df""" 
@@ -228,14 +247,9 @@ def plot_cm_dist_kdedensity(observed_pred, predictions, true_labels, title, max_
     var_tn = observed_pred.variance[0, true_neg].numpy()
     var_fp = observed_pred.variance[1, false_pos].numpy()
     var_fn = observed_pred.variance[0, false_neg].numpy()
-    
-    # max_var = max(var_tp.max(), var_tn.max(), var_fp.max(), var_fn.max())
-    # min_var = min(var_tp.min(), var_tn.min(), var_fp.min(), var_fn.min())
+
     max_y_lim = max_yaxis
     plt.figure(figsize=(10, 10))
-    # to add same scale
-    # bins = np.linspace(0, max(max(var_tp), max(var_tn), max(var_fp), max(var_fn)), 50)
-    # bins = np.linspace(min_var, max_var, 50)
     plt.subplot(2, 2, 4)
     sns.histplot(var_tp, kde=True,color='green', bins=10, stat='density')
     plt.title('True Positives',fontsize=12)
@@ -287,7 +301,13 @@ def plot_prob_hist(probabilities, y_labels, title, bind_inhib):
     plt.grid(True)
     plt.show(); 
 
+# Swarm plot for GP variance 
 def plot_swarmplot(predictions, true_labels, observed_pred, title):
+    """Plot a swarm plot of each classification type made by a GP model
+    @params: 
+        - predictions (np.arry): predictions of the model
+        - true_labels (np.array): ground truth labels for every prediction 
+        - title (str): optional title for the plot"""
     true_labels = true_labels.numpy()
     
     true_pos = np.where((predictions == 1) & (true_labels == 1))[0] 
@@ -316,7 +336,13 @@ def plot_swarmplot(predictions, true_labels, observed_pred, title):
 
 def probabilities_vs_var(true_labels, probabilities, observed_pred,title, bind_inhib):
     """Scatter plot of probabilities vs variance
-    probabilities: extracted from samples
+    @params: 
+        - probabilities (np array): extracted from samples
+        - true_labels (np.array): ground truth labels for every probabilitiy 
+        - observed_pred (GP model object return) 
+        - title (str): title for the plot 
+        - bind_inhib (str): to correclty label the axes
+
     """
     idx_1 = np.where(true_labels == 1)[0]
     idx_0 = np.where(true_labels == 0)[0]
@@ -371,6 +397,12 @@ def swarm_prob(model, x_input, true_labels, title):
     
 
 def plot_prec_recall(true_labels, probabilities_class1, title):
+    """Plot precision-recall curve
+    This was used for the RF models 
+    @params: 
+        - true_labels (np.array): ground truth labels
+        - probabilities_class1 (np.array): probabilities of class 1 predictions, can be class 0 if you want
+        - title (str): title for the plot"""
     precision, recall, thresholds = precision_recall_curve(true_labels, probabilities_class1)
     plt.figure(figsize=(8,6))
     display = PrecisionRecallDisplay(precision=precision, recall=recall)
@@ -417,4 +449,21 @@ def swarm_by_var_and_prob(predictions, true_labels, observed_pred, probabilities
     plt.show();
         
     
-                
+def zscore_adi(train_x, test_x, k):
+    mean_distances = []
+    for compound in train_x:
+        distances = [euclidean(compound, other) for other in train_x if not np.array_equal(compound, other)]
+        mean_distances.append(np.mean(sorted(distances)[:k]))
+
+    mean_distances = np.array(mean_distances)
+    mean_distance_mean = np.mean(mean_distances)
+    mean_distance_std = np.std(mean_distances)
+
+    adi_zscores = []
+    for unseen_compound in test_x:
+        distances_to_neighbors = [euclidean(unseen_compound, other) for other in train_x]
+        mean_distance_unseen = np.mean(sorted(distances_to_neighbors)[:k])
+        z_score = (mean_distance_unseen - mean_distance_mean) / mean_distance_std
+        adi_zscores.append(z_score)
+
+    return adi_zscores

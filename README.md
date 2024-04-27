@@ -11,6 +11,19 @@ cd NEK9_Final
 pip install -r requirements.txt
 ```
 
+# To activate this environment, use
+#
+#     $ conda activate nek2_final
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
+
+conda env create -f environment.yml 
+conda activate nek2_final
+python -m ipykernel install --user --name nek2_final 
+ 
 ## Usage
 To run the main analysis notebook, use the following command:
 ```bash
